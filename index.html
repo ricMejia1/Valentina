@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Valentine?</title>
+
   <style>
     :root{
       --bg1:#0f1020;
@@ -76,7 +77,7 @@
     }
 
     h1{
-      margin: 0 0 10px;
+      margin:0 0 10px;
       font-size: clamp(30px, 4vw, 44px);
       line-height:1.1;
     }
@@ -87,7 +88,6 @@
       line-height:1.5;
     }
 
-    /* ✅ Option A: Larger arena */
     .arena{
       position:relative;
       height: 460px;
@@ -95,6 +95,11 @@
       background: rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
       overflow:hidden;
+    }
+
+    .buttons{
+      position:absolute;
+      inset:0;
     }
 
     .btn{
@@ -110,6 +115,7 @@
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       will-change: transform, left, top;
+      position:absolute;
     }
     .btn:active{ transform: scale(.98); }
 
@@ -117,6 +123,9 @@
       background: linear-gradient(135deg, var(--yes), var(--yes2));
       color:#10101f;
       box-shadow: 0 14px 40px rgba(255,77,125,.25);
+      left: 30%;
+      top: 60%;
+      transform: translate(-50%, -50%);
     }
     .btn-yes:hover{ filter: brightness(1.05); }
 
@@ -126,26 +135,11 @@
       border: 1px solid rgba(255,255,255,.14);
       cursor: not-allowed;
       opacity: .55;
-    }
-    .btn-no:hover{ opacity:.85; }
-
-    .buttons{
-      position:absolute;
-      inset:0;
-    }
-
-    #yesBtn{
-      position:absolute;
-      left: 30%;
-      top: 60%;
-      transform: translate(-50%, -50%);
-    }
-    #noBtn{
-      position:absolute;
       left: 70%;
       top: 60%;
       transform: translate(-50%, -50%);
     }
+    .btn-no:hover{ opacity:.85; }
 
     /* Success overlay */
     .success{
@@ -177,7 +171,6 @@
       opacity:1;
     }
 
-    /* ✅ Heart: revert to the earlier "working" style (no fade-in heart pop) */
     .bigHeart{
       width:90px;height:90px;
       margin: 0 auto 14px;
@@ -187,7 +180,6 @@
       border-radius: 18px;
       box-shadow: 0 18px 60px rgba(255,77,125,.35);
       animation: heartbeat 1.1s ease-in-out infinite;
-      opacity:1;
     }
     .bigHeart:before, .bigHeart:after{
       content:"";
@@ -214,10 +206,11 @@
       place-items:center;
     }
     #cuteGif img{
-      width: min(300px, 76vw);
+      width: min(320px, 78vw);
       height: auto;
       border-radius: 16px;
       box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      display:block;
     }
 
     .footer-note{
@@ -267,8 +260,8 @@
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="bg-hearts" id="bgHearts"></div>
 
   <main class="wrap">
@@ -289,9 +282,8 @@
             Best decision ever. See you on our date 😌✨
           </p>
 
-          <!-- ✅ Use local bear.webp in the same folder as index.html -->
           <div id="cuteGif">
-            <img src="./bear.webp" alt="Funny love bear sending hearts" loading="lazy" />
+            <img src="./bear.webp" alt="Funny love bear sending hearts" />
           </div>
 
           <div class="footer-note">Screenshot this moment. Legendary.</div>
@@ -304,115 +296,109 @@
 
 <script>
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const rand = (min, max) => Math.random() * (max - min) + min;
+  const rand  = (min, max) => Math.random() * (max - min) + min;
 
-  // background hearts
+  // Background hearts
   const bg = document.getElementById("bgHearts");
   for (let i = 0; i < 18; i++) {
     const h = document.createElement("div");
     h.className = "heart";
-    const left = rand(0, 100);
+    h.style.left = rand(0, 100) + "vw";
     const size = rand(10, 18);
-    const dur = rand(8, 16);
-    const delay = rand(0, 8);
-    h.style.left = left + "vw";
     h.style.width = size + "px";
     h.style.height = size + "px";
-    h.style.animationDuration = dur + "s";
-    h.style.animationDelay = delay + "s";
+    h.style.animationDuration = rand(8, 16) + "s";
+    h.style.animationDelay = rand(0, 8) + "s";
     h.style.opacity = rand(0.2, 0.75);
     bg.appendChild(h);
   }
 
-  // dodge logic
-  const arena = document.getElementById("arena");
-  const noBtn = document.getElementById("noBtn");
+  // Dodge logic
+  const arena  = document.getElementById("arena");
+  const noBtn  = document.getElementById("noBtn");
   const yesBtn = document.getElementById("yesBtn");
 
   let noPos = { x: 0, y: 0 };
   let initialized = false;
   let dodgeBoost = 1;
 
-  function getArenaRect() {
-    return arena.getBoundingClientRect();
-  }
+  function getArenaRect(){ return arena.getBoundingClientRect(); }
 
-  function placeNo(x, y) {
+  function placeNo(x, y){
     noBtn.style.left = x + "px";
-    noBtn.style.top = y + "px";
+    noBtn.style.top  = y + "px";
     noBtn.style.transform = "translate(0,0)";
-    noPos.x = x; noPos.y = y;
+    noPos = { x, y };
   }
 
-  function randomSpot(avoidRect) {
-    const a = getArenaRect();
+  function randomSpot(avoidRect){
+    const a  = getArenaRect();
     const bw = noBtn.offsetWidth;
     const bh = noBtn.offsetHeight;
 
-    const pad = 12;
+    const pad  = 12;
     const minX = pad;
-    const maxX = a.width - bw - pad;
+    const maxX = a.width  - bw - pad;
     const minY = pad;
     const maxY = a.height - bh - pad;
 
-    for (let i = 0; i < 30; i++) {
+    for (let i=0; i<30; i++){
       const x = rand(minX, maxX);
       const y = rand(minY, maxY);
-      const r = { left: x, top: y, right: x + bw, bottom: y + bh };
+      const r = { left:x, top:y, right:x+bw, bottom:y+bh };
 
-      if (!avoidRect) return { x, y };
+      if (!avoidRect) return {x,y};
 
       const overlap =
         !(r.right < avoidRect.left || r.left > avoidRect.right || r.bottom < avoidRect.top || r.top > avoidRect.bottom);
 
-      if (!overlap) return { x, y };
+      if (!overlap) return {x,y};
     }
     return { x: rand(minX, maxX), y: rand(minY, maxY) };
   }
 
-  function initNoPosition() {
-    const a = getArenaRect();
+  function initNoPosition(){
+    const a  = getArenaRect();
     const bw = noBtn.offsetWidth;
     const bh = noBtn.offsetHeight;
 
-    const x = a.width * 0.70 - bw * 0.5;
+    const x = a.width  * 0.70 - bw * 0.5;
     const y = a.height * 0.60 - bh * 0.5;
-    placeNo(clamp(x, 12, a.width - bw - 12), clamp(y, 12, a.height - bh - 12));
+    placeNo(clamp(x, 12, a.width  - bw - 12), clamp(y, 12, a.height - bh - 12));
     initialized = true;
   }
 
-  function dodge(pointerX, pointerY) {
+  function dodge(pointerX, pointerY){
     if (!initialized) initNoPosition();
 
-    const a = getArenaRect();
+    const a  = getArenaRect();
     const bw = noBtn.offsetWidth;
     const bh = noBtn.offsetHeight;
 
     const px = pointerX - a.left;
     const py = pointerY - a.top;
 
-    const cx = noPos.x + bw / 2;
-    const cy = noPos.y + bh / 2;
+    const cx = noPos.x + bw/2;
+    const cy = noPos.y + bh/2;
 
     const dist = Math.hypot(cx - px, cy - py);
     const trigger = 150 * dodgeBoost;
 
-    if (dist < trigger) {
+    if (dist < trigger){
       dodgeBoost = clamp(dodgeBoost + 0.03, 1, 1.35);
 
       const yesRect = yesBtn.getBoundingClientRect();
       const avoid = {
-        left: (yesRect.left - a.left) - 26,
-        top:  (yesRect.top  - a.top)  - 26,
-        right:(yesRect.right- a.left) + 26,
-        bottom:(yesRect.bottom-a.top) + 26
+        left:  (yesRect.left   - a.left) - 26,
+        top:   (yesRect.top    - a.top)  - 26,
+        right: (yesRect.right  - a.left) + 26,
+        bottom:(yesRect.bottom - a.top)  + 26
       };
 
       const spot = randomSpot(avoid);
-
       noBtn.style.opacity = "0.35";
       placeNo(spot.x, spot.y);
-      requestAnimationFrame(() => (noBtn.style.opacity = "0.55"));
+      requestAnimationFrame(() => noBtn.style.opacity = "0.55");
     }
   }
 
@@ -427,49 +413,31 @@
   }, { passive:true });
 
   noBtn.addEventListener("mouseenter", (e) => dodge(e.clientX, e.clientY));
-  noBtn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dodge(e.clientX, e.clientY);
-  });
-  noBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
+  noBtn.addEventListener("pointerdown", (e) => { e.preventDefault(); dodge(e.clientX, e.clientY); });
+  noBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); });
 
-  window.addEventListener("resize", () => {
-    initialized = false;
-    requestAnimationFrame(initNoPosition);
-  });
+  window.addEventListener("resize", () => { initialized = false; requestAnimationFrame(initNoPosition); });
 
-  // Yes flow
+  // Yes flow + confetti + gif reveal
   const success = document.getElementById("success");
   const confetti = document.getElementById("confetti");
   const cuteGif = document.getElementById("cuteGif");
 
-  function launchConfetti() {
+  function launchConfetti(){
     confetti.innerHTML = "";
     const pieces = 140;
 
-    for (let i = 0; i < pieces; i++) {
+    for (let i=0; i<pieces; i++){
       const p = document.createElement("i");
-      const left = rand(0, 100);
-      const sizeW = rand(6, 12);
-      const sizeH = rand(10, 18);
-      const dur = rand(1.9, 3.8);
-      const delay = rand(0, 0.7);
-      const dx = (Math.random() < 0.5 ? -1 : 1) * rand(0, 26) + "vw";
+      p.style.left = rand(0, 100) + "vw";
+      p.style.width  = rand(6, 12) + "px";
+      p.style.height = rand(10, 18) + "px";
+      p.style.animationDuration = rand(1.9, 3.8) + "s";
+      p.style.animationDelay = rand(0, 0.7) + "s";
+      p.style.setProperty("--dx", ((Math.random()<0.5?-1:1) * rand(0,26)) + "vw");
 
-      p.style.left = left + "vw";
-      p.style.width = sizeW + "px";
-      p.style.height = sizeH + "px";
-      p.style.animationDuration = dur + "s";
-      p.style.animationDelay = delay + "s";
-      p.style.setProperty("--dx", dx);
-
-      const colors = ["#ff4d7d", "#ff79a8", "#a75fff", "#ffd166", "#6ee7ff", "#b8ffb1"];
-      p.style.background = colors[Math.floor(Math.random() * colors.length)];
-
+      const colors = ["#ff4d7d","#ff79a8","#a75fff","#ffd166","#6ee7ff","#b8ffb1"];
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
       confetti.appendChild(p);
       p.addEventListener("animationend", () => p.remove());
     }
@@ -477,19 +445,25 @@
 
   yesBtn.addEventListener("click", () => {
     yesBtn.disabled = true;
-    noBtn.disabled = true;
+    noBtn.disabled  = true;
 
-    document.getElementById("buttons").style.opacity = "0";
-    document.getElementById("buttons").style.pointerEvents = "none";
+    const buttons = document.getElementById("buttons");
+    buttons.style.opacity = "0";
+    buttons.style.pointerEvents = "none";
 
     arena.classList.add("shake");
     setTimeout(() => arena.classList.remove("shake"), 400);
 
+    setTimeout(() => success.classList.add("show"), 260);
+
     setTimeout(() => {
-      success.classList.add("show");
-    }, 260);
+      cuteGif.style.opacity = "1";
+      cuteGif.style.transform = "translateY(0) scale(1)";
+      launchConfetti();
+    }, 620);
+  });
 
-    set
-
-
-::contentReference[oaicite:0]{index=0}
+  window.addEventListener("load", () => requestAnimationFrame(initNoPosition));
+</script>
+</body>
+</html>
